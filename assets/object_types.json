@@ -1,0 +1,34 @@
+[
+    {
+        "color": "#ff1e47ff",
+        "name": "Character",
+        "properties": [
+            {
+                "name": "dialog",
+                "type": "string",
+                "value": "???"
+            },
+            {
+                "name": "trainer",
+                "type": "bool",
+                "value": false
+            }
+        ]
+    },
+    {
+        "color": "#ffa40002",
+        "name": "PlayerStart",
+        "properties": [
+            {
+                "name": "sightX",
+                "type": "int",
+                "value": 8
+            },
+            {
+                "name": "sightY",
+                "type": "int",
+                "value": 4
+            }
+        ]
+    }
+]
