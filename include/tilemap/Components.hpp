@@ -1,7 +1,7 @@
 #pragma once
 
-#include <SFML/System/Vector2.hpp>
-#include "config/Math.hpp"
+#include "common.hpp"
+#include "Direction.hpp"
 
 namespace Tm
 {
@@ -35,11 +35,47 @@ namespace Tm
     };
 
     /**
-     *
+     * Living object, like a trainer, or the player itself.
      */
-    struct Object
+    struct Character
     {
+        explicit Character(const std::string &name, sf::Time speed = sf::milliseconds(200))
+            : name(name), speed(speed), facingDirection(Direction::DOWN) {}
 
+
+        std::string name;
+
+        /**
+         * @brief The duration to move from one tile to another for a character.
+         * @remark Define the speed of the player.
+         */
+        sf::Time speed;
+
+        Direction facingDirection;
     };
 
+    /**
+     * A character or an object that is moving between two tiles
+     */
+    struct Moving
+    {
+        explicit Moving(const vec2i &target, const vec2i &origin)
+            : startingTime(sf::getCurrentTime()), destination(target), interpolatedPos(origin) {}
+
+        /// The time the character has started moving
+        sf::Time startingTime;
+        vec2i destination;
+
+        /// The position interpolated each frame between origin and destination
+        vec2f interpolatedPos;
+    };
+
+    /**
+     * Talkable object, that should open a GUI to display the text.
+     * Like a interactive character.
+     */
+    struct Dialog
+    {
+        std::string text;
+    };
 }

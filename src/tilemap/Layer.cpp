@@ -4,7 +4,8 @@
 namespace Tm
 {
     Layer::Layer(const sf::Vector2i &size)
-        : m_size(size)
+        : m_size(size),
+          m_scroll(1.0f, 1.0f)
     {
 
     }

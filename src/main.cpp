@@ -1,24 +1,43 @@
 #include <iostream>
 #include "tilemap/Region.hpp"
-#include "renderer/SFMLRenderer.hpp"
 #include "controller/KeyboardController.hpp"
 #include "config/Json.hpp"
 #include "tilemap/RegionLoader.hpp"
+#include "renderer/SceneManager.hpp"
+#include "renderer/TilemapScene.hpp"
+#include "renderer/ImGuiObserver.hpp"
+#include "battle/RandomAI.hpp"
+
+struct NC
+{
+    int a;
+};
+
+NC& x()
+{
+    static NC nc;
+    return nc;
+}
+
+void test()
+{
+    entt::registry r;
+    const auto& cr = r;
+    auto e = r.create();
+    r.emplace<NC>(e);
+
+    auto comp = cr.get<NC>(e);
+    comp.a = 0;
+}
 
 int main()
 {
-    const int tileSize(80);
-    const sf::Vector2i sight(8, 4);
-    const sf::Vector2i viewport(sf::Vector2f(sight) * 2.0f + 1.0f);
-    const sf::Vector2i win(viewport * tileSize);
+    renderer::SceneManager sceneManager(assets::getFilePath("config.json"));
+    renderer::ImGuiObserver imgui(sceneManager);
+    sceneManager.setController(new KeyboardController());
 
-    Tm::RegionLoader loader("map.json");
-    auto &region = loader.region();
+    sceneManager.pushScene(new renderer::TilemapScene(sceneManager));
+    sceneManager.show();
 
-    renderer::SFMLRenderer renderer(win.y, win.x);
-    KeyboardController controller;
-    Tm::TilemapEngine engine(controller);
-
-    renderer.gameLoop(region, engine);
     return 0;
 }

@@ -1,4 +1,5 @@
 #include "tilemap/RegionLoader.hpp"
+#include "pokemon/Trainer.hpp"
 #include "common.hpp"
 #include <fstream>
 
@@ -78,6 +79,7 @@ namespace Tm
                 for (auto &objectRef : layer.at("objects"))
                 {
                     Json object = objectRef; // Copy for non-const; to add default object type data
+                    const string name = object.at("name");
                     const string type = object.at("type");
 
                     if (!type.empty())
@@ -100,13 +102,26 @@ namespace Tm
                         }
                     }
 
+                    if (object.contains("properties"))
+                    {
+                        auto props = Loader::parseProperties(object.at("properties"));
+                        for (auto&&[key, value] : props)
+                        {
+                            object[key] = Loader::propertyToJson(value);
+                        }
+                    }
+
+                    vec2f objPos;
+                    objPos.x = object.at("x");
+                    objPos.y = object.at("y");
+                    objPos /= vec2f(m_tileset->tilesize()); // Object position is in pixel, we want in tile
+                    const vec2i objPosRounded = vec2i(objPos);
+
+                    auto &registry = m_region->registry();
+
                     if (type == "PlayerStart")
                     {
-                        Vector2i playerStartPx;
-                        playerStartPx.x = object.at("x");
-                        playerStartPx.y = object.at("y");
-
-                        const Vector2i playerStart = playerStartPx / m_tileset->tilesize();
+                        const Vector2i playerStart = objPosRounded;
 
                         Vector2i playerSight;
                         playerSight.x = object.at("sightX");
@@ -114,11 +129,53 @@ namespace Tm
 
                         cout << "Found player start" << endl;
 
-                        auto &registry = m_region->registry();
                         auto player = registry.create();
-                        registry.emplace<Tm::Position>(player, playerStart);
-                        registry.emplace<Tm::Player>(player, playerSight);
+                        registry.emplace<Position>(player, playerStart);
+                        registry.emplace<Character>(player, "Regis");
+                        registry.emplace<Player>(player, playerSight);
                     }
+                    else if (type == "Character")
+                    {
+                        auto character = registry.create();
+                        registry.emplace<Position>(character, objPosRounded);
+                        registry.emplace<Character>(character, name);
+
+                        {
+                            const auto &key = "dialog";
+                            if (object.contains(key) && object.at(key).is_string())
+                            {
+                                const std::string &value = object.at(key);
+                                registry.emplace<Dialog>(character, value);
+                            }
+                        }
+                        {
+                            const bool isTrainer = object.value("trainer", false);
+                            if(isTrainer)
+                            {
+                                registry.emplace<Pkm::Trainer>(character);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (layer.contains("properties"))
+            {
+                const auto props = Loader::parseProperties(layer.at("properties"));
+                back.properties() = props;
+
+                for (auto&[k, v] :props)
+                {
+                    cout << k << endl;
+                }
+
+                if (props.contains("scrollX") && holds_alternative<float>(props.at("scrollX")))
+                {
+                    back.scroll().x = get<float>(props.at("scrollX"));
+                }
+                if (props.contains("scrollY") && holds_alternative<float>(props.at("scrollY")))
+                {
+                    back.scroll().y = get<float>(props.at("scrollY"));
                 }
             }
         }

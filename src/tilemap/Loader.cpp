@@ -17,11 +17,11 @@ namespace Tm
             {
                 map[name] = string(value);
             }
-            else if (type == "int" && value.is_number_integer())
+            else if (type == "int" && value.is_number())
             {
                 map[name] = int(value);
             }
-            else if (type == "float" && value.is_number_float())
+            else if (type == "float" && value.is_number())
             {
                 map[name] = float(value);
             }

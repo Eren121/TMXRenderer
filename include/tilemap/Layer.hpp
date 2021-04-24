@@ -2,6 +2,7 @@
 
 #include <entt/entt.hpp>
 #include <SFML/System.hpp>
+#include "Loader.hpp"
 
 namespace Tm
 {
@@ -18,6 +19,7 @@ namespace Tm
         Layer(const sf::Vector2i &size);
         virtual ~Layer() = default;
 
+        const vec2i& size() const { return m_size; }
         int width() const;
         int height() const;
 
@@ -27,7 +29,16 @@ namespace Tm
          */
         virtual bool canMoveTo(const sf::Vector2i &tileCoords) const = 0;
 
+        PropertyMap &properties() { return m_properties; }
+
+        const PropertyMap &properties() const { return m_properties; }
+
+        const vec2f& scroll() const { return m_scroll; }
+        vec2f& scroll() { return m_scroll; }
+
     protected:
         sf::Vector2i m_size;
+        PropertyMap m_properties;
+        vec2f m_scroll;
     };
 }

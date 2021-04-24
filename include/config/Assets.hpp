@@ -11,9 +11,9 @@ namespace assets
         return "../assets/";
     }
 
-    inline std::string getFileName(const std::string &path)
+    inline std::string getFilePath(const std::string &name)
     {
-        return directory() + path;
+        return directory() + name;
     }
 
     inline void open(const std::string &path, std::ifstream &ifs)
