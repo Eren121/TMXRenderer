@@ -1,21 +1,21 @@
 
-#include "tilemap/Layer.hpp"
+#include "tilemap/AbstractLayer.hpp"
 
 namespace Tm
 {
-    Layer::Layer(const sf::Vector2i &size)
+    AbstractLayer::AbstractLayer(const sf::Vector2i &size)
         : m_size(size),
           m_scroll(1.0f, 1.0f)
     {
 
     }
 
-    int Layer::width() const
+    int AbstractLayer::width() const
     {
         return m_size.x;
     }
 
-    int Layer::height() const
+    int AbstractLayer::height() const
     {
         return m_size.y;
     }

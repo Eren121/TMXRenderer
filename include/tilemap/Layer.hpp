@@ -1,8 +1,7 @@
 #pragma once
 
-#include <entt/entt.hpp>
-#include <SFML/System.hpp>
-#include "Loader.hpp"
+#include "common.hpp"
+#include "Property.hpp"
 
 namespace Tm
 {
@@ -13,11 +12,11 @@ namespace Tm
      *  - One layer of decoration object (static)
      *  - One layer of characters, moveable objects (dynamic)
      */
-    class Layer
+    class AbstractLayer
     {
     public:
-        Layer(const sf::Vector2i &size);
-        virtual ~Layer() = default;
+        AbstractLayer(const sf::Vector2i &size);
+        virtual ~AbstractLayer() = default;
 
         const vec2i& size() const { return m_size; }
         int width() const;
@@ -29,16 +28,16 @@ namespace Tm
          */
         virtual bool canMoveTo(const sf::Vector2i &tileCoords) const = 0;
 
-        PropertyMap &properties() { return m_properties; }
+        PropertiesMap &properties() { return m_properties; }
 
-        const PropertyMap &properties() const { return m_properties; }
+        const PropertiesMap &properties() const { return m_properties; }
 
         const vec2f& scroll() const { return m_scroll; }
         vec2f& scroll() { return m_scroll; }
 
     protected:
         sf::Vector2i m_size;
-        PropertyMap m_properties;
+        PropertiesMap m_properties;
         vec2f m_scroll;
     };
 }
