@@ -13,9 +13,9 @@ namespace renderer
 
     private:
         void receiveEvent(const OnInputEvent &eventData) override;
-        void receiveEvent(const OnUpdate &eventData) override;
-        void receiveEvent(const OnRender &eventData) override;
-        void receiveEvent(const OnGameOpen &eventData) override;
+        void receiveEvent(const OnUpdate &event) override;
+        void receiveEvent(const OnRender &event) override;
+        void receiveEvent(const OnGameOpen &event) override;
         void receiveEvent(const OnGameClose &eventData) override;
     };
 }

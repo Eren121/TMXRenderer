@@ -1,5 +1,6 @@
 #include "ui/MenuWidget.hpp"
 #include "renderer/ImGui.hpp"
+#include <SFML/Math.hpp>
 
 using namespace sf;
 using namespace std;
@@ -70,13 +71,13 @@ namespace ui
 
     void MenuWidget::setLabel(Option id, const string &label)
     {
-        assert(insideURect(m_optionsCount, id));
+        assert(isInsideRect(m_optionsCount, id));
         m_labels[id] = label;
     }
 
     const string &MenuWidget::label(Option id) const
     {
-        assert(insideURect(m_optionsCount, id));
+        assert(isInsideRect(m_optionsCount, id));
 
         auto it = m_labels.find(id);
         if (it == m_labels.end())
@@ -91,7 +92,7 @@ namespace ui
 
     void MenuWidget::setHovered(Option id)
     {
-        assert(insideURect(m_optionsCount, id));
+        assert(isInsideRect(m_optionsCount, id));
         m_hoveredOption = id;
     }
 

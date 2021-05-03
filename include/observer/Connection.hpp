@@ -1,10 +1,8 @@
-
 #pragma once
 
-
-
-class Connection {
-
-};
-
-
+namespace obs
+{
+    class Connection
+    {
+    };
+}

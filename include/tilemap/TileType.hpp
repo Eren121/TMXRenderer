@@ -1,9 +1,13 @@
 #pragma once
 
 #include "common.hpp"
+#include <tmxlite/Tileset.hpp>
+#include "Property.hpp"
 
 namespace Tm
 {
+    using GID = int;
+
     /**
      * @brief A type of tile. Do not represent one specific tile position,
      *        but instead the type shared between all tiles of the same type.
@@ -13,20 +17,28 @@ namespace Tm
     class TileType final
     {
     public:
-        TileType(const std::string &name, bool walkable, const sf::Vector2i &atlasPos);
+        /// For keyable
+        TileType() = default;
+        TileType(const tmx::Tileset::Tile &tile, const tmx::Tileset &parent);
         ~TileType() = default;
 
         /// @remarks Returns false means a character can't move to this tile
         bool walkable() const;
 
-        const std::string &name() const;
+        /// Returns the underlying TMX tile
+        const auto& tmx() const { return m_tmx_tile; }
 
-        const sf::Vector2i &atlasPos() const;
+        /// Global tile id (starts at 1)
+        auto gid() const { return m_gid; }
+
+        /// Local tile id (relative to the tileset, starts at 0)
+        auto lid() const { return m_tmx_tile.ID; }
 
     private:
-        sf::Vector2i m_atlasPos;
-        std::string m_name;
-        bool m_walkable;
+        tmx::Tileset::Tile m_tmx_tile;
+        PropertiesMap m_properties;
+        bool m_walkable{false};
+        GID m_gid;
     };
 }
 

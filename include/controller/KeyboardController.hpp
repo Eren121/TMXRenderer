@@ -22,6 +22,8 @@ public:
     void markAsConsumed(Command command) override;
 private:
     std::set<sf::Keyboard::Key> m_justPressedKeys;
+
+    std::stack<Command> m_inputVectorStack;
 };
 
 

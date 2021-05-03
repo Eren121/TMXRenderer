@@ -1,5 +1,6 @@
 #include "tilemap/systems/PlayerMovementSystem.hpp"
 #include "tilemap/Engine.hpp"
+#include "config/Debug.hpp"
 
 namespace Tm
 {
@@ -22,11 +23,17 @@ namespace Tm
             {
                 auto &playerPos = region.registry().get<Position>(player);
                 auto destination = playerPos + direction;
-
-                if (region.canMoveTo(destination))
+                
+                if (debugState.noCollisions || region.canMoveTo(destination))
                 {
                     movementSystem.moveTo(region, player, destination);
                 }
+
+                // Update facing direction accordingly to the move direction
+                // Even if the player do not actually move
+                auto &character = region.registry().get<Character>(player);
+                const auto &pos = region.registry().get<Tm::Position>(player);
+                character.facingDirection = facingDirection(destination - pos);
             }
         }
     }

@@ -1,73 +1,42 @@
 #pragma once
 
-#include <variant>
-#include "common.hpp"
 #include "TileType.hpp"
-#include "Loader.hpp"
+#include "Property.hpp"
+#include "Direction.hpp"
+#include "common.hpp"
+#include <tuple>
+#include <tmxlite/Tileset.hpp>
 
 namespace Tm
 {
+    /// Merge all tilesets files (.tsx files)
+    /// one Tm::Tileset can represent multiple tmx:Tileset
     class Tileset
     {
     public:
-        Tileset(const std::string &tilesetJson);
+        Tileset();
         ~Tileset() = default;
 
-        int columns() const { return m_columns; }
+        /// Create a Tileset by merging multiple files
+        /// tmx:: is really just a wrapper and parser around .tmx files
+        void create(const std::vector<tmx::Tileset> &tmx_tilesets);
 
-        const string &image() const { return m_image; }
+        const TileType &operator[](GID gid) const;
 
-        int margin() const { return m_margin; }
+        bool contains(GID gid) const { return m_tiles.contains(gid); }
 
-        const string &name() const { return m_name; }
-
-        int spacing() const { return m_spacing; }
-
-        int tilecount() const { return m_tilecount; }
-
-        int tileheight() const { return m_tileheight; }
-
-        int tilewidth() const { return m_tilewidth; }
-
-        sf::Vector2i tilesize() const { return {m_tilewidth, m_tileheight}; }
-
-        const TileType *operator[](int gid) const;
+        /// Get the tile for a character from the character's type name. A character can be the player, PNG, mobs...
+        /// Returns 0 if the tile is not found
+        GID getCharacterTile(const string &objectType, Direction direction, bool isMoving) const;
 
     private:
-        void loadTiles(const Json &tiles);
+        std::vector<tmx::Tileset> m_tmx_tilesets;
 
-        template<typename T>
-        T getProperty(const PropertyMap &map, const std::string &key, T def)
-        {
-            const auto it = map.find(key);
-            if (it == map.end())
-            {
-                return def;
-            }
+        /// Parsed tiles map
+        std::map<GID, TileType> m_tiles;
 
-            // Get only if it's the right type
-            const auto &val = it->second;
-            if (std::holds_alternative<T>(val))
-            {
-                return std::get<T>(val);
-            }
-            else
-            {
-                return def;
-            }
-        }
-
-    private:
-        int m_columns;
-        string m_image;
-        int m_margin;
-        string m_name;
-        int m_spacing;
-        int m_tilecount;
-        int m_tileheight;
-        int m_tilewidth;
-
-        std::map<int, std::unique_ptr<TileType>> m_tiles;
+        /// Key is a tuple of: type, direction, isMoving
+        std::map<std::tuple<string, Direction, bool>, GID> m_charactersTile;
     };
 }
 

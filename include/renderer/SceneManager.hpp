@@ -1,8 +1,9 @@
 #pragma once
 
+#include "common.hpp"
 #include "Scene.hpp"
 #include "controller/Controller.hpp"
-#include "common.hpp"
+#include "config/Config.hpp"
 #include <SFML/Graphics.hpp>
 #include <stack>
 
@@ -51,10 +52,13 @@ namespace renderer
      *        can also be a ui.
      */
     class SceneManager final
-        : public obs::Subject<OnInputEvent, OnUpdate, OnRender, OnGameOpen, OnGameClose>
+        : public obs::Subject<OnInputEvent, OnUpdate, OnRender, OnGameOpen, OnGameClose>,
+          public obs::Observer<OnConfigParameterChanged>
     {
     public:
         SceneManager(const string &configFile);
+
+        void receiveEvent(const OnConfigParameterChanged &eventData) override;
 
         /// Add a scene over all others scenes.
         /// This new added scene has priority for all inputs and is rendered last.
@@ -62,6 +66,8 @@ namespace renderer
         void pushScene(Scene *scene);
 
         const Scene &topScene() const { return *m_scenes.back(); }
+
+        const auto &scenes() const { return m_scenes; }
 
         auto &scenes() { return m_scenes; }
 
@@ -83,6 +89,10 @@ namespace renderer
         const Controller &controller() const;
         void setController(Controller *controller);
 
+        auto &config() const { return m_config; }
+
+        auto &config() { return m_config; }
+
     private:
         void handleEvents();
         void updateAll();
@@ -102,6 +112,8 @@ namespace renderer
         /// Clock reseted at each call to update(), that is once per frame
         /// Measure time between previous frame and current frame
         sf::Clock m_delta;
+
+        Config m_config;
     };
 }
 

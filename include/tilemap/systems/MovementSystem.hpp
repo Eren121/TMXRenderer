@@ -23,7 +23,7 @@ namespace Tm
          *         that is reflecting the real position as float if it is moving.
          *         The standard integer position is returned if it is not moving.
          */
-        vec2f getInterpolatedPosition(const Region &region, entt::entity object) const;
+        vec2f getInterpolatedPosition(entt::entity object) const;
     };
 }
 

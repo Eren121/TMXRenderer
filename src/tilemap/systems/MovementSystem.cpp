@@ -7,7 +7,7 @@ namespace Tm
     {
         auto &region = m_engine.region();
         auto &registry = region.registry();
-        auto view = registry.view<Moving, Character, Position>();
+        auto view = registry.view<IsMoving, Character, Position>();
 
         for (auto &&[entity, moving, character, pos] : view.each())
         {
@@ -20,8 +20,8 @@ namespace Tm
                 // Update accordingly the object's position
                 pos = moving.destination;
 
-                // Removing the Moving component so that the object does not move anymore
-                registry.remove<Moving>(entity);
+                // Removing the IsMoving component so that the object does not move anymore
+                registry.remove<IsMoving>(entity);
             }
             else
             {
@@ -37,26 +37,23 @@ namespace Tm
 
     bool MovementSystem::isMoving(const Region &region, entt::entity object) const
     {
-        return region.registry().has<Moving>(object);
+        return region.registry().has<IsMoving>(object);
     }
 
     void MovementSystem::moveTo(Region &region, entt::entity object, const vec2i &destination)
     {
-        if (!region.registry().has<Moving>(object))
+        if (!region.registry().has<IsMoving>(object))
         {
             auto &pos = region.registry().get<Position>(object);
-            region.registry().emplace<Moving>(object, destination, pos);
-
-            // Update facing direction accordingly to the move direction
-            auto &character = region.registry().get<Character>(object);
-            character.facingDirection = facingDirection(destination - pos);
+            region.registry().emplace<IsMoving>(object, destination, pos);
         }
     }
 
-    vec2f MovementSystem::getInterpolatedPosition(const Region &region, entt::entity object) const
+    vec2f MovementSystem::getInterpolatedPosition(entt::entity object) const
     {
-        const auto &moving = region.registry().try_get<Moving>(object);
-        const auto &currentPos = region.registry().get<Position>(object);
+        const auto &registry = m_engine.region().registry();
+        const auto &moving = registry.try_get<IsMoving>(object);
+        const auto &currentPos = registry.get<Position>(object);
         vec2f ret;
 
         if (moving)

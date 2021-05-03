@@ -9,7 +9,6 @@ sf::Keyboard::Key KeyboardController::convertCommandToKey(Command command) const
 {
     sf::Keyboard::Key ret(sf::Keyboard::Unknown);
 
-
     switch (command)
     {
         case Command::LEFT: ret = sf::Keyboard::Left;
@@ -52,23 +51,11 @@ sf::Keyboard::Key KeyboardController::convertCommandToKey(Command command) const
 
 sf::Vector2<int> KeyboardController::getInputVector() const
 {
-    sf::Vector2<int> ret;
+    vec2i ret;
 
-    if (isPressed(Command::LEFT))
+    if(!m_inputVectorStack.empty())
     {
-        ret.x--;
-    }
-    else if (isPressed(Command::RIGHT))
-    {
-        ret.x++;
-    }
-    else if (isPressed(Command::UP))
-    {
-        ret.y--;
-    }
-    else if (isPressed(Command::DOWN))
-    {
-        ret.y++;
+        getInputDirection(m_inputVectorStack.top(), ret);
     }
 
     return ret;
@@ -77,7 +64,7 @@ sf::Vector2<int> KeyboardController::getInputVector() const
 bool KeyboardController::handleEvent(const sf::Event &e, Command &command)
 {
     bool ret(false);
-
+    
     switch (e.type)
     {
         case sf::Event::KeyPressed:
@@ -85,8 +72,38 @@ bool KeyboardController::handleEvent(const sf::Event &e, Command &command)
             m_justPressedKeys.insert(e.key.code);
             break;
 
+        case sf::Event::KeyReleased:
+            {
+                Command releasedCmd;
+                if(convertKeyToCommand(e.key.code, releasedCmd))
+                {
+                    if(!m_inputVectorStack.empty() && m_inputVectorStack.top() == releasedCmd)
+                    {
+                        m_inputVectorStack.pop();
+
+                        while(!m_inputVectorStack.empty() && !isPressed(m_inputVectorStack.top()))
+                        {
+                            m_inputVectorStack.pop();
+                        }
+                    }
+                }
+            }
+            break;
+
+
         default:
             break;
+    }
+
+    if(ret)
+    {
+        // Update the input vector if key was pressed
+
+        vec2i inputVec;
+        if(getInputDirection(command, inputVec))
+        {
+            m_inputVectorStack.push(command);
+        }
     }
 
     return ret;

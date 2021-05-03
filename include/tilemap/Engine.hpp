@@ -11,7 +11,7 @@ namespace Tm
     class Engine
     {
     public:
-        Engine(renderer::SceneManager &sceneManager);
+        Engine(renderer::SceneManager &sceneManager, Region &region);
         ~Engine() = default;
 
         void update();

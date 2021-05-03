@@ -1,13 +1,18 @@
 #include "renderer/ImGuiObserver.hpp"
-#include "imgui-SFML.h"
+#include <imgui-SFML.h>
+#include <imgui.h>
 
 namespace renderer
 {
     ImGuiObserver::ImGuiObserver(SceneManager &parent)
     {
+        // Attach events
+
         parent.attachObserver<OnInputEvent>(*this);
         parent.attachObserver<OnUpdate>(*this);
         parent.attachObserver<OnRender>(*this);
+        parent.attachObserver<OnGameOpen>(*this);
+        parent.attachObserver<OnGameClose>(*this);
     }
 
     void ImGuiObserver::receiveEvent(const OnInputEvent &eventData)
@@ -15,19 +20,45 @@ namespace renderer
         ImGui::SFML::ProcessEvent(eventData.e);
     }
 
-    void ImGuiObserver::receiveEvent(const OnUpdate &eventData)
+    void ImGuiObserver::receiveEvent(const OnUpdate &event)
     {
-        ImGui::SFML::Update(eventData.source.window(), eventData.delta);
+        ImGui::SFML::Update(event.source.window(), event.delta);
     }
 
-    void ImGuiObserver::receiveEvent(const OnRender &eventData)
+    void ImGuiObserver::receiveEvent(const OnRender &event)
     {
-        ImGui::SFML::Render(eventData.source.window());
+        const auto &config = event.source.config();
+
+        // Render Imgui window only if in debug mode
+        if (config.isDebugMode())
+        {
+            if(ImGui::Begin("Debug Window"))
+            {
+                // Global config
+                event.source.config().showImguiDebugWindow();
+
+                // Render all scene debug information
+                for (auto &scene : event.source.scenes())
+                {
+                    scene->showImguiDebugWindow();
+                }
+            }
+            ImGui::End();
+        }
+
+        // Imgui notification for rendering
+        ImGui::SFML::Render(event.source.window());
     }
 
-    void ImGuiObserver::receiveEvent(const OnGameOpen &eventData)
+    void ImGuiObserver::receiveEvent(const OnGameOpen &event)
     {
-        ImGui::SFML::Init(eventData.source.window());
+        ImGui::SFML::Init(event.source.window());
+
+        if (event.source.config().noImguiIni())
+        {
+            // Set to nullptr to not use imgui.ini
+            ImGui::GetIO().IniFilename = nullptr;
+        }
     }
 
     void ImGuiObserver::receiveEvent(const OnGameClose &eventData)

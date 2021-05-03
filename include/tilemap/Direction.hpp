@@ -18,3 +18,11 @@ enum class Direction
 vec2i facingVector(Direction dir);
 
 Direction facingDirection(vec2i vec);
+
+/// Rotations are counterclockwise, DOWN is default orientation.
+/// Returns in degrees.
+/// DOWN is 0°
+/// LEFT is 90°
+/// RIGHT is -90°
+/// UP is 180°.
+float getAngle(Direction dir);

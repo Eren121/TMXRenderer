@@ -43,11 +43,11 @@ namespace Tm
                 m_sceneManager.pushScene(dialogMenu);
 
                 // Start battle at the end of the dialog if it's a trainer
-                if (auto trainer = registry.try_get<Pkm::Trainer>(entity))
+                if (registry.try_get<Pkm::Trainer>(entity))
                 {
-                    dialogMenu->attachObserver([&, e](const renderer::OnSceneClose &event) {
+                    dialogMenu->attachObserver([&, e](const renderer::OnSceneClose &) {
 
-                        if (auto trainer = registry.try_get<Pkm::Trainer>(e))
+                        if (registry.try_get<Pkm::Trainer>(e))
                         {
                             m_sceneManager.pushScene(new Btl::BattleScene(m_sceneManager, registry, e));
                         }

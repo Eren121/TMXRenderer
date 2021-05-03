@@ -1,5 +1,11 @@
+#pragma once
 
-#ifndef POKEMON_DEBUG_HPP
-#define POKEMON_DEBUG_HPP
+// All debug options
+// Accessed by ImGUi so should be global variables
 
-#endif
+struct Debug
+{
+    bool noCollisions = false;
+};
+
+extern Debug debugState;

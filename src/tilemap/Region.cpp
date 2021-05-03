@@ -1,4 +1,5 @@
 #include "tilemap/Region.hpp"
+#include "tilemap/Layer.hpp"
 #include <algorithm>
 
 namespace Tm
@@ -54,52 +55,33 @@ namespace Tm
             return entity;
         }
 
-        assert(false);
+        assert("Not player found while getting the player" && false);
     }
 
     bool Region::canMoveTo(const sf::Vector2i &tileCoords) const
     {
         bool ret(false);
 
+        // Check for OOB
         if (tileCoords.x >= 0 && tileCoords.y >= 0 && tileCoords.x < width() && tileCoords.y < height())
         {
-            bool empty(true);
             ret = true;
 
+            // Can move only if all layers allow moving to this position
 
-            // Can move only if there is at least one non-empty layer
-            // And all non-empty layers allow moving to this position
+            // Previously checked for "there is at least one non-empty layer"
+            // But supposely there is always at last one non-empty layer in fact (otherwise black background)
 
-            for (auto &layer : m_layers)
+            for (const auto &layer : m_layers)
             {
-                if (layer.contains(tileCoords))
+                if (!layer->canMoveTo(tileCoords))
                 {
-                    empty = false;
-
-                    if (!layer.canMoveTo(tileCoords))
-                    {
-                        ret = false;
-                        break;
-                    }
+                    ret = false;
+                    break;
                 }
-            }
-
-            if (empty)
-            {
-                ret = false;
             }
         }
 
         return ret;
-    }
-
-    const std::vector<StaticLayer> &Region::layers() const
-    {
-        return m_layers;
-    }
-
-    std::vector<StaticLayer> &Region::layers()
-    {
-        return m_layers;
     }
 }

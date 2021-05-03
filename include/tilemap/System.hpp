@@ -20,7 +20,7 @@ namespace Tm
         bool hasFocus() const;
 
     protected:
-        Engine &m_engine;
         renderer::SceneManager &m_sceneManager;
+        Engine &m_engine;
     };
 }

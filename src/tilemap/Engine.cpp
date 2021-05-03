@@ -4,20 +4,22 @@
 
 namespace Tm
 {
-    Engine::Engine(renderer::SceneManager &sceneManager)
-        : m_region(nullptr),
+    Engine::Engine(renderer::SceneManager &sceneManager, Region &region)
+        : m_region(&region),
           m_movementSystem(nullptr),
           m_playerMovementSystem(nullptr)
     {
-        static Tm::RegionLoader regionLoader("map.json");
-        m_region = &regionLoader.region();
-
         m_movementSystem = new MovementSystem(sceneManager, *this);
         m_playerMovementSystem = new PlayerMovementSystem(sceneManager, *this);
 
         m_systems.emplace_back(m_movementSystem);
         m_systems.emplace_back(m_playerMovementSystem);
         m_systems.emplace_back(new InteractionSystem(sceneManager, *this));
+
+        for(auto &layer : m_region->layers())
+        {
+            layer->setEngine(*this);
+        }
     }
 
     void Engine::update()
@@ -34,7 +36,7 @@ namespace Tm
     sf::Vector2f Engine::cameraPosition(const Region &region) const
     {
         const auto player = region.player();
-        auto ret = m_movementSystem->getInterpolatedPosition(region, player);
+        auto ret = m_movementSystem->getInterpolatedPosition(player);
 
         // The camera is always in the center of the player => center of the tile
         ret += 0.5f;

@@ -8,28 +8,6 @@
 #include "renderer/ImGuiObserver.hpp"
 #include "battle/RandomAI.hpp"
 
-struct NC
-{
-    int a;
-};
-
-NC& x()
-{
-    static NC nc;
-    return nc;
-}
-
-void test()
-{
-    entt::registry r;
-    const auto& cr = r;
-    auto e = r.create();
-    r.emplace<NC>(e);
-
-    auto comp = cr.get<NC>(e);
-    comp.a = 0;
-}
-
 int main()
 {
     renderer::SceneManager sceneManager(assets::getFilePath("config.json"));

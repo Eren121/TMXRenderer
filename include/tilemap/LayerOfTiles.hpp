@@ -1,40 +1,34 @@
 #pragma once
 
-#include "AbstractLayer.hpp"
+#include "Layer.hpp"
 #include "TileType.hpp"
 
 namespace Tm
 {
-    class Layer : public AbstractLayer
+    class LayerOfTiles : public Layer
     {
     public:
-        Layer(const sf::Vector2i &size);
-        ~Layer() override = default;
+        explicit LayerOfTiles(const sf::Vector2i &size);
+        ~LayerOfTiles() override = default;
 
-        /// @remarks For the Ground AbstractLayer, that only means of the tile is walkable (and exists) or not.
+        /// @remarks For the Ground Layer, that only means of the tile is walkable (and exists) or not.
         bool canMoveTo(const sf::Vector2i &pos) const override;
 
         /// @brief getter and setter for tile position
         const TileType *operator[](const sf::Vector2i &tileCoords) const;
         const TileType *&operator[](const sf::Vector2i &tileCoords);
 
-        /**
-         * @param pos The position to check.
-         * @return Whether there is a tile at the given position.
-         */
-        bool isTileEmpty(const sf::Vector2i &pos) const;
+        bool isTileEmpty(const sf::Vector2i &pos) const override;
 
-        /// returns 0 is there is no tile at this position
+        /// @remarks returns 0 if there is no tile at this position
         GID getGID(vec2i pos) const;
 
-        /// Name of the layer
-        auto &name() const { return m_name; }
-        void setName(const string &name) { m_name = name; }
+        void render(sf::RenderTarget &target, TileRenderer &renderer, const sf::IntRect &bounds,
+                    const sf::Transform &parentTransform) const override;
 
     private:
         /// Region. If a tile is NULL, that's mean the position is outside the region.
         std::vector<std::vector<const TileType *>> m_tiles;
-        string m_name;
     };
 }
 

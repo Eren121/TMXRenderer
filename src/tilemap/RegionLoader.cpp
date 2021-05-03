@@ -1,183 +1,73 @@
 #include "tilemap/RegionLoader.hpp"
 #include "pokemon/Trainer.hpp"
+#include "config/Iterator2D.hpp"
 #include "common.hpp"
 #include <fstream>
+#include <tmxlite/Layer.hpp>
+#include <tmxlite/TileLayer.hpp>
+#include <tmxlite/ObjectGroup.hpp>
 
 using namespace std;
 using namespace sf;
 
 namespace Tm
 {
-    RegionLoader::RegionLoader(const string &jsonFile)
+    RegionLoader::RegionLoader(const string &mapFile)
     {
-        if (!jsonFile.ends_with(".json"))
+        if (!m_map.load(mapFile))
         {
-            throw std::runtime_error("Map file format not recognized: " + jsonFile + ", only JSON is supported.");
+            throw std::runtime_error("Map file format not recognized: " + mapFile + ", tmxlite loading failed.");
         }
 
-        ifstream ifs;
-        assets::open(jsonFile, ifs);
-
-        const Json json = Json::parse(ifs);
-        const int height = json.at("height").get<int>();
-        const int width = json.at("width").get<int>();
-
+        const int width = m_map.getTileCount().x;
+        const int height = m_map.getTileCount().y;
         m_region = make_unique<Region>(width, height);
 
-        // Properties of the region
-        if (json.contains("properties"))
-        {
-            const PropertyMap props = Loader::parseProperties(json.at("properties"));
+        /// Load tiles (maps each GID to a tile)
+        m_tileset.create(m_map.getTilesets());
 
-            if (props.contains("tileTypes") && holds_alternative<std::string>(props.at("tileTypes")))
-            {
-                const std::string filename = get<string>(props.at("tileTypes"));
-                loadObjectTypes(filename);
-            }
-        }
-        // Currently only one tileset supported
-
-        const string tileset = json.at("tilesets").at(0).at("source");
-        m_tileset = make_unique<Tileset>(tileset);
-
-        loadLayers(json.at("layers"));
+        loadObjectTypes(assets::getFilePath("object_types.json"));
+        loadLayers();
     }
 
-    void RegionLoader::loadLayers(const Json &layers)
+    void RegionLoader::loadLayers()
     {
-        for (auto &layer : layers)
+        // TMX quickstart:
+        // https://github.com/fallahn/tmxlite/wiki/Quick-Start
+
+        const auto &tmx_layers = m_map.getLayers();
+        for (const auto &tmx_layer : tmx_layers)
         {
             // Add one layer
+            // We should differentiate which layer type while adding one
+            // Because the class is different
 
-            m_region->layers().emplace_back(m_region->size());
-            auto &back = m_region->layers().back(); // Just added layer
-
-            int x = 0;
-            int y = 0;
-
-            if (layer.contains("data"))
+            if (tmx_layer->getType() == tmx::Layer::Type::Object)
             {
-                for (int gid : layer.at("data"))
-                {
-                    // Add each tile of the layer
+                // The layer is an object layer
+                const auto &layer = new LayerOfObjects(*m_region);
+                m_region->layers().emplace_back(layer);
 
-                    gid--; // Tiled add 1 to allow zero to be the "empty tile".
+                const auto &tmx_objectLayer = tmx_layer->getLayerAs<tmx::ObjectGroup>();
+                loadObjectLayer(*layer, tmx_objectLayer);
+            }
+            else if (tmx_layer->getType() == tmx::Layer::Type::Tile)
+            {
+                // The layer is a tile layer
+                const auto &layer = new LayerOfTiles(m_region->size());
+                m_region->layers().emplace_back(layer);
 
-                    back[{x, y}] = (*m_tileset)[gid];
-
-                    x++;
-                    if (x == m_region->width())
-                    {
-                        y++;
-                        x = 0;
-                    }
-                }
+                const auto &tmx_tileLayer = tmx_layer->getLayerAs<tmx::TileLayer>();
+                loadTileLayer(*layer, tmx_tileLayer);
+            }
+            else
+            {
+                cerr << "Warning: unknown layer type in tileset: " << tmx_layer->getName() << endl;
             }
 
-            if (layer.contains("objects"))
-            {
-                for (auto &objectRef : layer.at("objects"))
-                {
-                    Json object = objectRef; // Copy for non-const; to add default object type data
-                    const string name = object.at("name");
-                    const string type = object.at("type");
-
-                    if (!type.empty())
-                    {
-                        if (m_objTypes.contains(type))
-                        {
-                            // Add all predefined fields
-                            const auto &propertyMap = m_objTypes.at(type);
-                            for (auto &prop : propertyMap)
-                            {
-                                const auto &name = prop.first;
-                                const auto &value = prop.second;
-
-                                object[name] = Loader::propertyToJson(value);
-                            }
-                        }
-                        else
-                        {
-                            cerr << "Warning: unknown object type: " << type << endl;
-                        }
-                    }
-
-                    if (object.contains("properties"))
-                    {
-                        auto props = Loader::parseProperties(object.at("properties"));
-                        for (auto&&[key, value] : props)
-                        {
-                            object[key] = Loader::propertyToJson(value);
-                        }
-                    }
-
-                    vec2f objPos;
-                    objPos.x = object.at("x");
-                    objPos.y = object.at("y");
-                    objPos /= vec2f(m_tileset->tilesize()); // Object position is in pixel, we want in tile
-                    const vec2i objPosRounded = vec2i(objPos);
-
-                    auto &registry = m_region->registry();
-
-                    if (type == "PlayerStart")
-                    {
-                        const Vector2i playerStart = objPosRounded;
-
-                        Vector2i playerSight;
-                        playerSight.x = object.at("sightX");
-                        playerSight.y = object.at("sightY");
-
-                        cout << "Found player start" << endl;
-
-                        auto player = registry.create();
-                        registry.emplace<Position>(player, playerStart);
-                        registry.emplace<Character>(player, "Regis");
-                        registry.emplace<Player>(player, playerSight);
-                    }
-                    else if (type == "Character")
-                    {
-                        auto character = registry.create();
-                        registry.emplace<Position>(character, objPosRounded);
-                        registry.emplace<Character>(character, name);
-
-                        {
-                            const auto &key = "dialog";
-                            if (object.contains(key) && object.at(key).is_string())
-                            {
-                                const std::string &value = object.at(key);
-                                registry.emplace<Dialog>(character, value);
-                            }
-                        }
-                        {
-                            const bool isTrainer = object.value("trainer", false);
-                            if(isTrainer)
-                            {
-                                registry.emplace<Pkm::Trainer>(character);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (layer.contains("properties"))
-            {
-                const auto props = Loader::parseProperties(layer.at("properties"));
-                back.properties() = props;
-
-                for (auto&[k, v] :props)
-                {
-                    cout << k << endl;
-                }
-
-                if (props.contains("scrollX") && holds_alternative<float>(props.at("scrollX")))
-                {
-                    back.scroll().x = get<float>(props.at("scrollX"));
-                }
-                if (props.contains("scrollY") && holds_alternative<float>(props.at("scrollY")))
-                {
-                    back.scroll().y = get<float>(props.at("scrollY"));
-                }
-            }
+            // Set the properties of the layer independant of type
+            auto &justAddedLayer = m_region->layers().back();
+            justAddedLayer->setName(tmx_layer->getName());
         }
     }
 
@@ -191,11 +81,152 @@ namespace Tm
 
         const Json json = Json::parse(ifs);
 
-        for (auto &type : json)
+        for (const auto &j_type : json)
         {
-            const std::string name = type.at("name");
-            const PropertyMap props = Loader::parseProperties(type.at("properties"));
+            const std::string name = j_type.at("name");
+            const PropertiesMap props = Property::asMap(j_type.at("properties"));
             m_objTypes[name] = props;
+        }
+    }
+
+    void RegionLoader::loadTileLayer(LayerOfTiles &into, const tmx::TileLayer &tmx_layer)
+    {
+        // The layer is a tile layer
+        const auto &tiles = tmx_layer.getTiles();
+
+        // Position of the tile in world coordinates
+        // Iterate to right, then to down
+        Iterator2D it(m_region->size());
+
+        for (const auto &tile : tiles)
+        {
+            GID gid = tile.ID;
+
+            // When gid is zero, that mean the world location is empty (no tile)
+            if(gid != 0)
+            {
+                if(m_tileset.contains(gid))
+                {
+                    into[*it] = &m_tileset[gid];
+                }
+                else
+                {
+                    cerr << "warning: unkown GID " << gid << " at position " << *it << endl;
+                }
+            }
+
+            ++it;
+        }
+    }
+
+    void RegionLoader::loadObjectLayer(LayerOfObjects &into, const tmx::ObjectGroup &tmx_layer)
+    {
+        // Load all objects: trainers, etc...
+        // Mostly dynamic elements
+
+        for (const tmx::Object &object : tmx_layer.getObjects())
+        {
+            PropertiesMap props = Property::asMap(object.getProperties());
+            const string &name = object.getName();
+            const string &type = object.getType();
+
+            // Add default object type data
+            // If it has a predefined type
+            updateObjectPropertiesFromType(props, type);
+
+            // Position of the object in world coordinates
+            // We must scale because getPosition() returns position in pixels
+            vec2f objPos;
+            objPos.x = object.getPosition().x;
+            objPos.y = object.getPosition().y;
+            objPos /= vec2f(m_map.getTileSize().x, m_map.getTileSize().y);
+            const vec2i objPosRounded = vec2i(objPos);
+
+            auto &registry = m_region->registry();
+
+            if (type == "PlayerStart")
+            {
+                const Vector2i playerStart = objPosRounded;
+
+                cout << "Found player start" << endl;
+
+                auto player = registry.create();
+                registry.emplace<Position>(player, playerStart);
+                auto &character = registry.emplace<Character>(player, "Regis");
+                character.speed = sf::milliseconds(Property::getOrDefault(props, "speed", 200.0f));
+                registry.emplace<Player>(player);
+
+
+                // Load player spritesheet
+                auto& sprite = registry.emplace<Sprite>(player);
+
+                for(Direction direction : magic_enum::enum_values<Direction>())
+                {
+                    const GID gid = m_tileset.getCharacterTile("player", direction, false);
+                    const GID gidMoving = m_tileset.getCharacterTile("player", direction, true);
+
+                    sprite.gids[direction] = gid;
+                    sprite.gidsMoving[direction] = gidMoving;
+                }
+
+                // Add the player in the same layer where he was found
+                into.addEntity(player);
+            }
+            else if (type == "Character")
+            {
+                auto character = registry.create();
+                registry.emplace<Position>(character, objPosRounded);
+                registry.emplace<Character>(character, name);
+
+                string dialog = Property::getOrDefault(props, "dialog", "");
+                if (!dialog.empty())
+                {
+                    registry.emplace<Dialog>(character, dialog);
+                }
+
+                const bool isTrainer = Property::getOrDefault(props, "trainer", false);
+                if (isTrainer)
+                {
+                    registry.emplace<Pkm::Trainer>(character);
+                }
+
+                // Characters have a sprite
+                auto &sprite = registry.emplace<Sprite>(character);
+                for(Direction direction : magic_enum::enum_values<Direction>())
+                {
+                    const GID gid = m_tileset.getCharacterTile("citizen", direction, false);
+                    const GID gidMoving = m_tileset.getCharacterTile("citizen", direction, true);
+
+                    sprite.gids[direction] = gid;
+                    sprite.gidsMoving[direction] = gidMoving;
+                }
+
+                // Add the character in the same layer where he was found
+                into.addEntity(character);
+            }
+        }
+    }
+
+    void RegionLoader
+    ::updateObjectPropertiesFromType(PropertiesMap &objectProps, const string &type)
+    {
+        if(m_objTypes.contains(type))
+        {
+            for(const auto &[name, prop] : m_objTypes.at(type))
+            {
+                if(!objectProps.contains(name))
+                {
+                    objectProps[name] = prop;
+                }
+            }
+        }
+        else if(!type.empty())
+        {
+            cerr << "Warning: unkown object type " << type << endl;
+        }
+        else
+        {
+            cerr << "Warning: object has empty type" << endl;
         }
     }
 }

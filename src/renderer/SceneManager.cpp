@@ -1,41 +1,18 @@
 #include "renderer/SceneManager.hpp"
-#include "imgui-SFML.h"
 
 using namespace std;
 using namespace sf;
 
 namespace renderer
 {
-    SceneManager::SceneManager(const string& configFile)
+    SceneManager::SceneManager(const string &configFile)
+        : m_config(configFile)
     {
-        std::ifstream config(configFile);
-        Json json = Json::object();
+        m_window.create(m_config.videoMode(), m_config.title(), m_config.windowStyle());
 
-        if(config)
-        {
-            config >> json;
-        }
-        else
-        {
-            cerr << "Warning: could not find config file " << configFile;
-            cerr << "." << endl << "Window configs are set to default." << endl;
-        }
+        assert(m_font.loadFromFile(assets::getFilePath(m_config.fontFileName())));
 
-        const auto width = json.value("width", 800);
-        const auto height = json.value("height", 800);
-        const auto title = json.value("title", "Pokemon");
-        const auto fullscreen = json.value("fullscreen", false);
-
-        auto styles = Style::Default;
-        if(fullscreen)
-        {
-            styles = Style::Fullscreen;
-        }
-
-        m_window.create(VideoMode(width, height), title.c_str(), styles);
-
-        assert(m_font.loadFromFile(assets::getFilePath("ProggyClean.ttf")));
-        ImGui::SFML::Init(m_window);
+        m_config.attachObserver(*this);
     }
 
     void renderer::SceneManager::pushScene(Scene *scene)
@@ -78,8 +55,6 @@ namespace renderer
         });
 
         m_window.display();
-
-        ImGui::SFML::Render(m_window);
     }
 
     vec2f SceneManager::size() const
@@ -120,8 +95,6 @@ namespace renderer
         sf::Event e{};
         while (m_window.pollEvent(e))
         {
-            ImGui::SFML::ProcessEvent(e);
-
             notify(OnInputEvent{
                 .source = *this,
                 .e = e
@@ -185,7 +158,7 @@ namespace renderer
             remove_if(
                 m_scenes.begin(),
                 m_scenes.end(),
-                [](const auto& scene) { return scene->isClosed(); }
+                [](const auto &scene) { return scene->isClosed(); }
             ),
             m_scenes.end()
         );
@@ -194,6 +167,20 @@ namespace renderer
         for (auto &scene : m_scenes)
         {
             scene->update();
+        }
+    }
+
+    void SceneManager::receiveEvent(const OnConfigParameterChanged &eventData)
+    {
+        switch(eventData.parameter)
+        {
+            case ConfigParameter::FULLSCREEN:
+                // Re-create the window
+                m_window.create(m_config.videoMode(), m_config.title(), m_config.windowStyle());
+                break;
+
+            default:
+                break;
         }
     }
 }

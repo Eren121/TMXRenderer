@@ -4,7 +4,7 @@ vec2i facingVector(Direction dir)
 {
     vec2i ret;
 
-    switch(dir)
+    switch (dir)
     {
         case Direction::UP:
             ret.y--;
@@ -39,18 +39,40 @@ Direction facingDirection(vec2i vec)
     // atan2 returns in interval [-pi;+pi]
 
     // remember y is to down
-    if(angle >= -3.0 * M_PI_4 && angle < -M_PI_4) {
+    if (angle >= -3.0 * M_PI_4 && angle < -M_PI_4)
+    {
         ret = Direction::UP;
     }
-    else if(angle >= -M_PI_4 && angle < M_PI_4) {
+    else if (angle >= -M_PI_4 && angle < M_PI_4)
+    {
         ret = Direction::RIGHT;
     }
-    else if(angle >= M_PI_4 && angle < 3.0 * M_PI_4) {
+    else if (angle >= M_PI_4 && angle < 3.0 * M_PI_4)
+    {
         ret = Direction::DOWN;
     }
-    else {
+    else
+    {
         ret = Direction::LEFT;
     }
 
     return ret;
+}
+
+float getAngle(Direction dir)
+{
+    switch (dir)
+    {
+        case Direction::UP:
+            return 180.0f;
+        case Direction::DOWN:
+            return 0.0f;
+        case Direction::LEFT:
+            return 90.0f;
+        case Direction::RIGHT:
+            return -90.0f;
+        default:
+            cerr << "warning: unkown angle " << dir << endl;
+            return 0.0f;
+    }
 }

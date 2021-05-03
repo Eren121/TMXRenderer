@@ -19,7 +19,6 @@
 #include "config/ECS.hpp"
 #include "observer/Observer.hpp"
 #include "observer/Subject.hpp"
-#include "observer/Macros.hpp"
 
 using namespace magic_enum::ostream_operators;
 
@@ -29,9 +28,17 @@ using std::endl;
 using std::cerr;
 using std::max;
 using std::min;
-
-template<typename T>
-using SharedPtr = std::shared_ptr<T>;
+using std::clamp;
 
 template<typename T>
 using UniquePtr = std::unique_ptr<T>;
+
+template<typename T, typename K, typename V>
+auto &getOrDefault(const T &container, const K &key, const V &def)
+{
+    if (container.contains(key)) return container.at(key);
+    else return def;
+}
+
+/// @returns the uppercased string
+string toUpper(const std::string &str);

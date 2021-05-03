@@ -23,8 +23,8 @@ namespace renderer
     {
 
     public:
-        Scene(SceneManager &sceneManager);
-        virtual ~Scene() = default;
+        explicit Scene(SceneManager &parent);
+        ~Scene() override = default;
 
         /// Render the scene.
         /// Do not perform any logic here, just rendering.
@@ -44,6 +44,11 @@ namespace renderer
         /// @return true if it's the game scene (2D tilemap world)
         virtual bool isGame() const;
 
+        /// @brief When debugging is enabled, relevant options can be drawn here
+        /// @remarks Centralize rendering to have only one Imgui window instead of several small ones
+        /// @remarks ImGui::BeginChild() for integration into Debug Window instead of ImGui::Begin()
+        virtual void showImguiDebugWindow() { }
+
         /// Get the size of the scene, that is the size of the window.
         vec2f size() const;
 
@@ -60,11 +65,18 @@ namespace renderer
         /// close() call "delete this", so do not use any member variable after calling close().
         void close();
 
-        SceneManager &m_sceneManager;
+        SceneManager &m_parent;
 
         /// Transformation that normalize the rendering window coordinates into [0; 1].
         /// Can be modified by inheriting scenes, it's really just an utility.
         sf::Transform m_coordSystem;
+
+
+        // Normalize the size of a sprite
+        // Because it's size is equal to the texture size by default
+        static inline void normalize(sf::Sprite &sprite) {
+            sprite.setScale(1.0f / sf::size(sprite.getTextureRect()));
+        }
 
     private:
 

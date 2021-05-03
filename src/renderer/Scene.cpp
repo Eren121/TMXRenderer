@@ -3,10 +3,10 @@
 
 namespace renderer
 {
-    Scene::Scene(SceneManager &sceneManager)
-        : m_sceneManager(sceneManager)
+    Scene::Scene(SceneManager &parent)
+        : m_parent(parent)
     {
-        const auto &sceneSize = sceneManager.size();
+        const auto &sceneSize = parent.size();
 
         // Normalize coords
         // so (1, 1) equals to full windows size
@@ -15,7 +15,7 @@ namespace renderer
 
     sf::RenderWindow &Scene::window()
     {
-        return m_sceneManager.window();
+        return m_parent.window();
     }
 
     void Scene::close()
@@ -26,7 +26,7 @@ namespace renderer
 
     vec2f Scene::size() const
     {
-        return m_sceneManager.size();
+        return m_parent.size();
     }
 
     bool Scene::isGame() const

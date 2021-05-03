@@ -3,10 +3,11 @@
 #include <memory>
 #include <entt/entt.hpp>
 #include "Components.hpp"
-#include "StaticLayer.hpp"
 
 namespace Tm
 {
+    class Layer;
+
     /**
      * Like a map in Pokemon (part loaded into the RAM)
      * (0, 0) = top left.
@@ -43,8 +44,8 @@ namespace Tm
          */
         bool canMoveTo(const sf::Vector2i &tileCoords) const;
 
-        const std::vector<StaticLayer>& layers() const;
-        std::vector<StaticLayer>& layers();
+        auto& layers() const { return m_layers; }
+        auto& layers() { return m_layers; }
 
 
     private:
@@ -52,6 +53,6 @@ namespace Tm
         entt::registry m_registry;
 
         /// Ground of the region (static): water, grass, etc...
-        std::vector<StaticLayer> m_layers;
+        std::vector<std::unique_ptr<Layer>> m_layers;
     };
 }

@@ -48,9 +48,9 @@ namespace ui
 
     private:
         renderer::SceneManager &m_parent;
-        std::map<Option, string, vec_comp> m_labels;
-        Option m_hoveredOption;
         vec2i m_optionsCount;
+        Option m_hoveredOption;
+        std::map<Option, string, vec_comp> m_labels;
 
         inline static const string DEF_LABEL { "?" };
     };

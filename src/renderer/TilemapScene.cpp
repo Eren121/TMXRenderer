@@ -1,17 +1,25 @@
 #include "renderer/TilemapScene.hpp"
 #include "renderer/SceneManager.hpp"
 #include "renderer/ImGui.hpp"
+#include "config/Debug.hpp"
+#include <fmt/core.h>
+#include <fmt/ostream.h>
 
 using namespace sf;
 using namespace std;
 
+using fmt::format;
+
+static bool tileInfoEnabled{false};
+
 namespace renderer
 {
-    TilemapScene::TilemapScene(SceneManager &sceneManager)
-        : Scene(sceneManager),
-          m_engine(sceneManager)
+    TilemapScene::TilemapScene(SceneManager &parent)
+        : Scene(parent),
+          m_regionLoader(assets::getFilePath(parent.config().mapFileName())),
+          m_engine(parent, m_regionLoader.region()),
+          m_tileRenderer(m_regionLoader.tileset())
     {
-        assert(m_tileset.loadFromFile(assets::getFilePath("tiles.png")));
     }
 
     void TilemapScene::update()
@@ -35,141 +43,262 @@ namespace renderer
         }
 
         const auto playerID = region.player();
-        const auto &player = region.registry().get<Tm::Player>(playerID);
         const auto playerPos = m_engine.cameraPosition(region);
         m_cameraPos = m_engine.cameraPosition(region);
 
-        const vec2f viewportSize(vec2f(player.viewportSize()));
-        vec2f tileSize(m_sceneManager.size() / viewportSize);
-        tileSize = vec2f{1, 1} * 128.0f;
+        const vec2f tileSizeInPx(m_parent.config().tileSizeInPx());
+        const auto cameraSize = vec2f(m_parent.size()) / tileSizeInPx;
+        const auto cameraOrigin(m_cameraPos - cameraSize / 2.0f);
 
-        // Rendering offset because of the player position
-        // Example:
-        //  If window size is (3, 3) tiles
-        //  To render without offset the player should be in position (1, 1)
-        const vec2f renderingOffset =
-            -(vec2f(playerPos) + 0.5f)
-            + m_sceneManager.size() / 2.0f;
-
-        for (auto &layer : region.layers())
+        for (const auto &layer : region.layers())
         {
-            renderLayer(layer, playerPos, tileSize);
-        }
+            // The tiles are rendered in world coordinates (1 tile = 1 unit)
+            // Pass a transform to transform the world coordinate into view coordinates
+            // that is what the player see: the player's camera
 
+            sf::Transform view;
+
+            // Move into camera coordinates
+            view = sf::Transform().translate(-cameraOrigin) * view;
+
+            // Move into window coordinates
+            view = sf::Transform().scale(tileSizeInPx) * view;
+
+            const vec2i begin(floor(m_cameraPos - cameraSize / 2.0f));
+            const vec2i end(ceil(m_cameraPos + cameraSize / 2.0f));
+            const sf::IntRect bounds{begin, end - begin};
+
+            layer->render(window(), m_tileRenderer, bounds, view);
+
+            //renderLayer(layer, playerPos, tileSize);
+        }
+        /*
         auto view = region.registry().view<const Tm::Character, const Tm::Position>();
 
-        for (auto &&[entity, character, position]: view.each())
+        for (auto entity : view)
         {
-            const auto pos = m_engine.movementSystem().getInterpolatedPosition(region, entity);
-            renderPlayer(pos, character.facingDirection, tileSize);
+            renderEntity(entity, tileSizeInPx);
         }
-
-        ImGui::Begin("Debug");
-        {
-            ostringstream ss;
-            ss << "Position: ";
-            ss << vec2i(playerPos);
-
-            auto pos = ss.str();
-            ImGui::Text(pos.c_str());
-        }
-        ImGui::End();
+*/
     }
 
-    void TilemapScene::renderLayer(const Tm::StaticLayer &layer, const vec2f &cameraPos,
+    void TilemapScene::renderLayer(const Tm::LayerOfTiles &layer, const vec2f &cameraCenter,
                                    const vec2f &tileSize)
     {
         // The count of tiles that fit in the window (can be float if the window is not exact multiple of tileSize)
-        const auto windowTileSize = vec2f(m_sceneManager.size()) / tileSize;
-        const vec2i begin(max(vec2i(cameraPos
-                                    - windowTileSize / 2.0f), vec2i{0, 0}));
-        const vec2i end(min(vec2i(ceil(cameraPos
-                                       + windowTileSize / 2.0f)), layer.size()));
+        const auto cameraSize = vec2f(m_parent.size()) / tileSize;
+        const vec2i begin(max(vec2i(cameraCenter
+                                    - cameraSize / 2.0f), vec2i{0, 0}));
+        const vec2i end(min(vec2i(ceil(cameraCenter
+                                       + cameraSize / 2.0f)), layer.size()));
+
+
+        const auto cameraOrigin(cameraCenter - cameraSize / 2.0f);
 
         for (int y = begin.y; y < end.y; ++y)
         {
             for (int x = begin.x; x < end.x; ++x)
             {
+                const vec2f pos(x, y);
                 const auto type = layer[{x, y}];
 
                 if (type)
                 {
-                    Sprite sprite(m_tileset,
-                                  IntRect(16 + type->atlasPos().x * 16, 16 + type->atlasPos().y * 16, 16, 16));
-                    const Vector2f tilePos(x, y);
 
-                    // Position in the world (unit: tile)
-                    auto position(tilePos);
+                    const auto &textureFile = type->tmx().imagePath;
+                    const auto &imagePosition(type->tmx().imagePosition);
+                    const auto &imageSize(type->tmx().imageSize);
 
-                    // Transform position from world to camera (unit: tile)
-                    // Here parallax effect is done
-                    position = (position - cameraPos);
+                    if (!m_texturesResource.contains(textureFile))
+                    {
+                        /// Texture not already loaded, load it
+                        auto &texture = m_texturesResource[textureFile];
 
-                    // Transform position from camera to window (unit: pixel)
-                    position = position * tileSize;
-                    position += vec2f(m_sceneManager.size()) / 2.0f;
+                        /// Assert the texture is found
+                        /// If the texture is not found, exit with error
+                        assert(texture.loadFromFile(assets::getFilePath(textureFile)));
+                    }
 
-                    sprite.setScale(tileSize / 16.0f);
-                    sprite.setScale(sprite.getScale());
-                    sprite.setPosition(position);
-                    window().draw(sprite);
+                    /// Now texture should always been already/just preloaded, just get a pointer to it
+                    const auto &texture = m_texturesResource.at(textureFile);
 
-                    sf::Text text(
-                        to_string(sf::Vector2i(x, y)) + "\n" + type->name() + "\n" + to_string(type->walkable()),
-                        m_sceneManager.font(), 18);
-                    text.setPosition(position);
-//                    m_window.draw(text);
+                    // Sprite sub-rect in pixel in local texture file
+                    Sprite sprite(texture, IntRect(
+                        imagePosition.x, imagePosition.y,
+                        imageSize.x, imageSize.y));
+
+                    sf::Transform model;
+
+                    // Make the tile size (1, 1)
+                    model.scale(1.0f / sf::size(sprite.getTextureRect()));
+
+                    // Move into the tile coordinates
+                    model = sf::Transform().translate(pos) * model;
+
+                    // Move into camera coordinates
+                    model = sf::Transform().translate(-cameraOrigin) * model;
+
+                    // Move into window coordinates
+                    model = sf::Transform().scale(tileSize) * model;
+
+
+                    const sf::Transform mvp = model;
+
+                    window().draw(sprite, mvp);
+
+                    if (tileInfoEnabled)
+                    {
+                        const int gid = type->gid();
+                        const int lid = type->lid();
+                        Text text(
+                            format("{}\nLID={}\nGID={}\nwalk={}", pos, lid, gid, type->walkable()),
+                            m_parent.font(), tileSize.x);
+
+                        text.setFillColor(Color::White);
+
+                        text.setPosition(mvp.transformPoint(0.0f, 0.0f));
+                        text.setScale(tileSize / sf::size(text.getLocalBounds()) * 0.8f);
+                        text.setScale(text.getScale().x, text.getScale().x);
+
+                        window().draw(text);
+                    }
                 }
             }
         }
     }
 
-    void TilemapScene::renderPlayer(const vec2f &playerPos, Direction direction, const vec2f &tileSize)
+    void TilemapScene::renderEntity(entt::entity entity, const vec2f &tileSize)
     {
-        int gid = 266;
-        int gidx = gid % 24;
-        int gidy = gid / 24;
+        auto &region = m_engine.region();
+        auto &registry = region.registry();
+        const auto &pos = m_engine.movementSystem().getInterpolatedPosition(entity);
+        const auto &sprite_comp = registry.try_get<Tm::Sprite>(entity);
+        const auto &character = registry.try_get<Tm::Character>(entity);
+        const auto &moving = registry.try_get<Tm::IsMoving>(entity);
 
-        Sprite sprite(m_tileset, IntRect(16 + gidx * 16, 16 + gidy * 16, 16, 16));
+        const auto cameraSize = vec2f(m_parent.size()) / tileSize;
+        const auto cameraOrigin(m_cameraPos - cameraSize / 2.0f);
 
-        // Position in the world (unit: tile)
-        auto position(playerPos);
+        // Default direction when the entity is non-orientable
+        Direction direction = Direction::DOWN;
 
-        // Transform position from world to camera (unit: tile)
-        position = (position - m_cameraPos);
-
-        // Transform position from camera to window (unit: pixel)
-        position = position * tileSize;
-        position += vec2f(m_sceneManager.size()) / 2.0f;
-
-        sprite.setOrigin(vec2f(8, 8));
-        position += tileSize / 2.0f;
-        sprite.setScale(tileSize / 16.0f);
-
-        // Render orientation
-        switch (direction)
+        if (!sprite_comp)
         {
-            case Direction::UP:
-                sprite.setRotation(180.0f);
-                break;
-
-            case Direction::DOWN:
-                break;
-
-            case Direction::LEFT:
-                sprite.setRotation(90.0f);
-                break;
-
-            case Direction::RIGHT:
-                sprite.setRotation(-90.0f);
-                break;
+            // Sprite is not renderable
+            return;
         }
 
-        sprite.setPosition(position);
-        window().draw(sprite);
+        if (character)
+        {
+            // The entity is a character
+            // It also has a facing direction and can be rendered accordingly
+            direction = character->facingDirection;
+        }
+
+        // Get the GID of the sprite when it's moving or not and relative to it's direction
+        Tm::GID gid = sprite_comp->gid(direction, moving != nullptr);
+
+        if (gid == 0)
+        {
+            // Zero is null tile
+            return;
+        }
+
+        // Animate the sprite if this tile is animated by Tiled Animator Editor
+        if (!m_regionLoader.tileset()[gid].tmx().animation.frames.empty())
+        {
+            /// TODO check if animation gid is same as sprite gid
+
+            auto &anim = registry.get_or_emplace<Tm::SpriteIsAnimating>(entity, Tm::SpriteIsAnimating{
+                .frame = 0,
+                .start = sf::getCurrentTime()
+            });
+            const auto &frames = m_regionLoader.tileset()[gid].tmx().animation.frames;
+            const tmx::Tileset::Tile::Animation::Frame *frame = &frames.at(anim.frame);
+
+            Time frameDuration = milliseconds(frame->duration);
+            const Time currentTime = getCurrentTime();
+
+
+            // Search next frame if needed
+            // Unlikely, under some circonstances (like lag, high rate animation), skip multiples frames
+            // But likely +1 frame or +0 (same frame)
+            while (currentTime > anim.start + frameDuration)
+            {
+                // Add time (step by step)
+                anim.start += frameDuration;
+
+                // Increment frame
+                anim.frame++;
+                if (anim.frame >= int(frames.size()))
+                {
+                    anim.frame = 0;
+                }
+
+                // Get updated frameDuration
+                frame = &frames.at(anim.frame);
+                frameDuration = milliseconds(frame->duration);
+            }
+
+            // Tiled save tile ID of animations relative to the tileset (LID)
+            // But tmx convert it to GID, so we already have it.
+            // This does not means we can use tiles from different tilesets for one animation;
+            // it's actually not possible inside Tiled Editor (but actually possible in the engine)
+            gid = frames.at(int(anim.frame)).tileID;
+
+            if (gid == 0)
+            {
+                // Zero is null tile
+                cerr << "warning: null tile in animation" << endl;
+                return;
+            }
+        }
+
+        const auto &type = m_regionLoader.tileset()[gid];
+        const auto &textureFile = type.tmx().imagePath;
+        const auto &imagePosition = type.tmx().imagePosition;
+        const auto &imageSize = type.tmx().imageSize;
+
+        if (!m_texturesResource.contains(textureFile))
+        {
+            /// Texture not already loaded, load it
+            auto &texture = m_texturesResource[textureFile];
+
+            /// Assert the texture is found
+            /// If the texture is not found, exit with error
+            assert(texture.loadFromFile(assets::getFilePath(textureFile)));
+        }
+
+        /// Now texture should always been already/just preloaded, just get a pointer to it
+        const auto &texture = m_texturesResource.at(textureFile);
+
+        Sprite sprite(texture, IntRect(imagePosition.x, imagePosition.y, imageSize.x, imageSize.y));
+
+        Transform model;
+
+        // Make the tile size (1, 1)
+        model.scale(1.0f / sf::size(sprite.getTextureRect()));
+
+        // Rotate to the facing direction
+        // Now done automatically be loading the right tile texture direction
+        /*sf::Transform rotation;
+        rotation.rotate(getAngle(direction), 0.5f, 0.5f);
+        model = rotation * model;*/
+
+        // Move into the tile coordinates
+        model = Transform().translate(pos) * model;
+
+        // Move into camera coordinates
+        model = Transform().translate(-cameraOrigin) * model;
+
+        // Move into window coordinates
+        model = Transform().scale(tileSize) * model;
+
+
+        window().draw(sprite, model);
     }
 
-    bool TilemapScene::handleCommand(Command command)
+    bool TilemapScene::handleCommand(Command)
     {
         return false;
     }
@@ -177,5 +306,56 @@ namespace renderer
     bool TilemapScene::isGame() const
     {
         return true;
+    }
+
+    void TilemapScene::showImguiDebugWindow()
+    {
+        const auto &region = m_engine.region();
+
+        if(ImGui::TreeNode("Tilemap debugging"))
+        {
+            const auto &playerID = m_engine.region().player();
+            auto &playerPos = m_engine.region().registry().get<Tm::Position>(playerID);
+            ImGui::InputInt2("Player position", reinterpret_cast<int *>(&playerPos));
+
+            ImGui::Checkbox("No collisions", &debugState.noCollisions);
+
+            ImGui::Checkbox("Tile info", &tileInfoEnabled);
+
+            if(ImGui::TreeNode("Tile inspector"))
+            {
+                static vec2i s_pos;
+                ImGui::InputInt2("Position to inspect", reinterpret_cast<int *>(&s_pos));
+
+                static bool posLinked = false;
+                ImGui::Checkbox("Link to the player position", &posLinked);
+
+                if (posLinked)
+                {
+                    s_pos = playerPos;
+                }
+
+                for (int i = 0; i < int(region.layers().size()); ++i)
+                {
+                    const auto &layerBase = region.layers().at(i);
+                    const auto &walkable = layerBase->canMoveTo(s_pos);
+                    const auto &name = layerBase->name();
+                    int gid = 0;
+
+                    // Draw tile only for tile layers
+                    if (layerBase->type() == tmx::Layer::Type::Tile)
+                    {
+                        const auto &layer = dynamic_cast<Tm::LayerOfTiles &>(*layerBase);
+                        gid = layer.getGID(s_pos);
+                    }
+
+                    const auto &label = format("layer '{}', gid={} walkable={}\n", name, gid, walkable);
+                    ImGui::Selectable(label.c_str(), false);
+                }
+
+                ImGui::TreePop();
+            }
+            ImGui::TreePop();
+        }
     }
 }

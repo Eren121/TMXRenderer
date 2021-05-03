@@ -9,7 +9,7 @@ namespace obs
      * @tparam Lambda Deduced Parameter of the constructor.
      */
     template<typename EventClass, typename Lambda>
-    struct LambdaObserver : Observer<EventClass>
+    class LambdaObserver final : public Observer<EventClass>
     {
     public:
         LambdaObserver(Lambda&& lambda)
@@ -17,14 +17,17 @@ namespace obs
         {
         }
 
+    protected:
+        void onDetach(const Subject <EventClass> &source) override
+        {
+            // Since the lambda depends only from the Subject, it should deallocate itself
+            delete this;
+        }
+
+        /// Care because the lambda will receive all events until the subject is destroyed
         void receiveEvent(const EventClass &eventData) override
         {
             m_lambda(eventData);
-
-            // !!
-            // The subject store a list of pointer to observers
-            // And don't delete it when callback is called, so delete it.
-            delete this;
         }
 
     private:
