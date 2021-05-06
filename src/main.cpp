@@ -1,10 +1,11 @@
 #include <iostream>
+#include "tilemap/TilemapScene.hpp"
 #include "tilemap/Region.hpp"
 #include "controller/KeyboardController.hpp"
 #include "config/Json.hpp"
 #include "tilemap/RegionLoader.hpp"
 #include "renderer/SceneManager.hpp"
-#include "renderer/TilemapScene.hpp"
+#include "tilemap/TilemapScene.hpp"
 #include "renderer/ImGuiObserver.hpp"
 #include "battle/RandomAI.hpp"
 
@@ -14,7 +15,7 @@ int main()
     renderer::ImGuiObserver imgui(sceneManager);
     sceneManager.setController(new KeyboardController());
 
-    sceneManager.pushScene(new renderer::TilemapScene(sceneManager));
+    sceneManager.pushScene(new Tm::TilemapScene(sceneManager));
     sceneManager.show();
 
     return 0;

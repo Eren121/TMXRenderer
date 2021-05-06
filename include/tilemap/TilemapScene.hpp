@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene.hpp"
+#include "renderer/Scene.hpp"
 #include "tilemap/Engine.hpp"
 #include "tilemap/Tileset.hpp"
 #include "tilemap/TileRenderer.hpp"
@@ -8,12 +8,12 @@
 #include "tilemap/RegionLoader.hpp"
 #include <SFML/Graphics.hpp>
 
-namespace renderer
+namespace Tm
 {
-    class TilemapScene : public Scene
+    class TilemapScene : public renderer::Scene
     {
     public:
-        TilemapScene(SceneManager &parent);
+        TilemapScene(renderer::SceneManager& parent);
         ~TilemapScene() override = default;
 
         void update() override;
@@ -22,16 +22,13 @@ namespace renderer
         bool isGame() const override;
 
     protected:
-        void renderLayer(const Tm::LayerOfTiles &layer, const vec2f &cameraCenter, const vec2f &tileSize);
-        void renderEntity(entt::entity entity, const vec2f &tileSize);
-
         void showImguiDebugWindow() override;
 
     private:
         bool handleCommand(Command command) override;
 
-        Tm::RegionLoader m_regionLoader;
-        Tm::Engine m_engine;
+        RegionLoader m_regionLoader;
+        Engine m_engine;
 
         /// Load on the fly the needed textures from sprites
         std::map<std::string, sf::Texture> m_texturesResource;
@@ -39,6 +36,6 @@ namespace renderer
         /// Cache for each frame
         vec2f m_cameraPos;
 
-        Tm::TileRenderer m_tileRenderer;
+        TileRenderer m_tileRenderer;
     };
 }
