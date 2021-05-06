@@ -96,8 +96,10 @@ namespace ui
         m_hoveredOption = id;
     }
 
-    void MenuWidget::handleCommand(Command command)
+    bool MenuWidget::handleCommand(Command command)
     {
+        bool ret(false);
+
         vec2i direction;
         if (getInputDirection(command, direction))
         {
@@ -113,6 +115,10 @@ namespace ui
                 .source = *this,
                 .choice = m_hoveredOption
             });
+
+            ret = true;
         }
+
+        return ret;
     }
 }

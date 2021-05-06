@@ -1,4 +1,5 @@
 #include "battle/BattleScene.hpp"
+#include "battle/InitState.hpp"
 #include "tilemap/Components.hpp"
 
 using namespace std;
@@ -6,39 +7,25 @@ using namespace sf;
 
 namespace Btl
 {
-    BattleScene::BattleScene(renderer::SceneManager &parent, entt::registry &registry, entt::entity opponent)
+    BattleScene::BattleScene(renderer::SceneManager& parent, entt::registry& registry, entt::entity opponent)
         : Scene(parent),
+          m_state(std::make_unique<InitState>(*this)),
           m_registry(registry),
-          m_opponent(opponent),
-          m_turnMenu(parent, {2, 2})
+          m_opponent(opponent)
     {
         m_player = getSingletonEntity<Tm::Player>(registry);
-
-        const auto border = 0.01f;
-        const auto posY = 0.75f;
-
-        m_turnMenu.setPosition({border, posY});
-        m_turnMenu.setScale({1.0f - border * 2.0f, 1.0f - posY - border});
-
-        m_turnMenu.setLabel(BTN_CHOOSE_MOVE, "Move");
-        m_turnMenu.setLabel(BTN_CHOOSE_OBJ, "Object");
-        m_turnMenu.setLabel(BTN_CHOOSE_PKM, "Pokemons");
-        m_turnMenu.setLabel(BTN_CHOOSE_FLEE, "Flee");
-
-        m_turnMenu.attachObserver(*this);
     }
 
     bool BattleScene::handleCommand(Command command)
     {
-        cout << command << endl;
-        m_turnMenu.handleCommand(command);
-        return true;
+        return m_state->handleCommand(command);
     }
 
     void BattleScene::renderScene()
     {
-        window().draw(m_turnMenu, m_coordSystem);
         renderHealthBars();
+
+        m_state->render();
     }
 
     bool BattleScene::isOpaque() const
@@ -48,6 +35,11 @@ namespace Btl
 
     void BattleScene::update()
     {
+        auto newState = m_state->update();
+        if(newState)
+        {
+            m_state = std::move(newState);
+        }
     }
 
     void BattleScene::renderHealthBars()
@@ -64,15 +56,5 @@ namespace Btl
         // Render player heath bar
         healthBar.setPosition({0.4f, 0.6f});
         window().draw(healthBar, m_coordSystem);
-    }
-
-    void BattleScene::receiveEvent(const ui::OnOptionAccept &eventData)
-    {
-        const auto& btn = eventData.choice;
-
-        if(btn == BTN_CHOOSE_FLEE)
-        {
-            close();
-        }
     }
 }

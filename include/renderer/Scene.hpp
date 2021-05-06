@@ -58,12 +58,17 @@ namespace renderer
 
         auto isClosed() const { return m_isClosed; }
 
-    protected:
+        auto& parent() const { return m_parent; }
+        auto& parent() { return m_parent; }
+
+        auto& coordSystem() const { return m_coordSystem; }
 
         /// Close the scene.
         /// It only works if it's the top scene.
         /// close() call "delete this", so do not use any member variable after calling close().
         void close();
+
+    protected:
 
         SceneManager &m_parent;
 

@@ -30,5 +30,42 @@
                 "value": 4
             }
         ]
+    },
+    {
+        "color": "#ffa0a0a4",
+        "name": "T_Character",
+        "properties": [
+            {
+                "name": "class",
+                "type": "string",
+                "value": "unknown"
+            },
+            {
+                "name": "direction",
+                "type": "string",
+                "value": "down"
+            },
+            {
+                "name": "moving",
+                "type": "bool",
+                "value": false
+            },
+            {
+                "name": "test",
+                "type": "file",
+                "value": "player.png"
+            }
+        ]
+    },
+    {
+        "color": "#ffa0a0a4",
+        "name": "T_Tile",
+        "properties": [
+            {
+                "name": "walkable",
+                "type": "bool",
+                "value": false
+            }
+        ]
     }
 ]

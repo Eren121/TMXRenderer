@@ -41,7 +41,8 @@ namespace ui
         /// Change the currently hovered option
         void setHovered(Option id);
 
-        void handleCommand(Command command);
+        /// @returns true If a button was clicked
+        bool handleCommand(Command command);
 
     protected:
         void draw(sf::RenderTarget &target, sf::RenderStates parent) const override;

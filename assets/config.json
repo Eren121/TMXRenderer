@@ -1,8 +1,11 @@
 {
-  "fullscreen": true,
+  "fullscreen": false,
 
-  "map": "TEST/SampleMap/samplemap.tmx",
+  "map": "map.tmx",
   "debugMode": true,
+  "noImguiIni": true,
 
-  "font": "ProggyClean.ttf"
+  "font": "ProggyClean.ttf",
+
+  "tileSizeInPx": 128
 }

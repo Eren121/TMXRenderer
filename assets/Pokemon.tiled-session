@@ -1,125 +1,134 @@
 {
-    "Map/SizeTest": {
-        "height": 4300,
-        "width": 2
-    },
-    "activeFile": "tiles.json",
-    "automapping.whileDrawing": false,
+    "activeFile": "",
     "expandedProjectPaths": [
-        "."
+        "TEST/SampleMap",
+        ".",
+        "TEST"
     ],
     "file.lastUsedOpenFilter": "Tous les Fichiers (*)",
     "fileStates": {
         "": {
-            "scaleInEditor": 4
-        },
-        "Male 01-1.json": {
-            "scaleInDock": 1,
-            "scaleInEditor": 4
-        },
-        "Pipoya RPG Tileset 32x32/SampleMap/LightShadow_pipo.tsx": {
-            "scaleInDock": 1,
-            "scaleInEditor": 3
-        },
-        "Pipoya RPG Tileset 32x32/SampleMap/[A]Flower_pipo.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
-        "Pipoya RPG Tileset 32x32/SampleMap/[A]Grass_pipo.tsx": {
-            "scaleInDock": 1,
-            "scaleInEditor": 3
-        },
-        "Pipoya RPG Tileset 32x32/SampleMap/[A]WaterFall_pipo.tsx": {
-            "scaleInDock": 1,
-            "scaleInEditor": 2
-        },
-        "Pipoya RPG Tileset 32x32/SampleMap/[A]Water_pipo.tsx": {
+        "SampleMap/[A]Flower_pipo.tsx": {
             "scaleInDock": 1
         },
-        "Pipoya RPG Tileset 32x32/SampleMap/samplemap.tmx#Male 01-1": {
+        "SampleMap/[A]Grass_pipo.tsx": {
             "scaleInDock": 1
         },
-        "Pipoya RPG Tileset 32x32/SampleMap/samplemap.tmx#[Base]BaseChip_pipo": {
+        "SampleMap/[A]WaterFall_pipo.tsx": {
             "scaleInDock": 1
         },
-        "Water.tsx": {
+        "SampleMap/[A]Water_pipo.tsx": {
+            "scaleInDock": 1
+        },
+        "SampleMap/samplemap.tmx#Male 01-1": {
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
-        "character.json": {
-            "dynamicWrapping": false,
-            "scaleInDock": 1,
-            "scaleInEditor": 4
+        "SampleMap/samplemap.tmx#[Base]BaseChip_pipo": {
+            "scaleInDock": 1
         },
-        "characters.json": {
-            "dynamicWrapping": false,
+        "TEST/SampleMap/[A]Flower_pipo.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1.54
+        },
+        "TEST/SampleMap/[A]Grass_pipo.tsx": {
+            "scaleInDock": 1
+        },
+        "TEST/SampleMap/[A]WaterFall_pipo.tsx": {
+            "scaleInDock": 1
+        },
+        "TEST/SampleMap/[A]Water_pipo.tsx": {
+            "scaleInDock": 1
+        },
+        "TEST/SampleMap/samplemap.tmx": {
+            "scale": 3,
+            "selectedLayer": 8,
+            "viewCenter": {
+                "x": 1280,
+                "y": 1195
+            }
+        },
+        "TEST/SampleMap/samplemap.tmx#Male 01-1": {
+            "scaleInEditor": 1
+        },
+        "TEST/SampleMap/samplemap.tmx#[A]Flower_pipo": {
+            "scaleInDock": 1
+        },
+        "TEST/SampleMap/samplemap.tmx#[A]Grass_pipo": {
+            "scaleInDock": 1
+        },
+        "TEST/SampleMap/samplemap.tmx#[A]WaterFall_pipo": {
+            "scaleInDock": 1
+        },
+        "TEST/SampleMap/samplemap.tmx#[A]Water_pipo": {
+            "scaleInDock": 1
+        },
+        "TEST/SampleMap/samplemap.tmx#[Base]BaseChip_pipo": {
+            "scaleInDock": 1
+        },
+        "TEST/SampleMap/samplemap.tmx#citizen": {
+            "scaleInDock": 1
+        },
+        "TEST/SampleMap/samplemap.tmx#player": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "TEST/player.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "citizen.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 5.5
         },
-        "map.json": {
-            "scale": 3,
-            "selectedLayer": 1,
-            "viewCenter": {
-                "x": 1852.6666666666665,
-                "y": 1332
-            }
-        },
-        "map.tmx": {
-            "scale": 1.3307,
-            "selectedLayer": 0,
-            "viewCenter": {
-                "x": -52.60389268805892,
-                "y": 80.03306530397535
-            }
-        },
-        "tiles.json": {
-            "dynamicWrapping": false,
+        "environment.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 4
         },
-        "tiles.tsx": {
+        "map.tmx": {
+            "scale": 1.5,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 2090.6666666666665,
+                "y": 797.3333333333333
+            }
+        },
+        "player.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1.54
+        },
+        "test": {
             "scaleInDock": 1,
             "scaleInEditor": 1
+        },
+        "tiles.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1.54
         }
     },
-    "last.exportedFilePath": "/home/raphael/CLionProjects/Pokemon/assets",
-    "last.imagePath": "/home/raphael/CLionProjects/Pokemon/assets/PIPOYA FREE RPG Character Sprites 32x32/Male",
-    "last.objectTypesPath": "/home/raphael/CLionProjects/Pokemon/assets/object_types.json",
-    "last.worldFilePath": "/home/raphael/CLionProjects/Pokemon/assets",
-    "loadedWorlds": [
-        "/home/raphael/CLionProjects/Pokemon/assets/Joto.world"
-    ],
-    "map.lastUsedExportFilter": "Fichiers de carte JSON (*.json)",
-    "map.lastUsedFormat": "json",
-    "map.layerDataFormat": null,
-    "map.tileHeight": 16,
-    "map.tileWidth": 16,
+    "last.exportedFilePath": "/home/raphael/CLionProjects/Pokemon/assets/TEST/SampleMap",
+    "last.imagePath": "/home/raphael/CLionProjects/Pokemon/assets",
+    "last.objectTemplatePath": "/home/raphael/CLionProjects/Pokemon/assets",
+    "last.objectTypesPath": "/home/raphael/CLionProjects/Pokemon/assets/TEST/SampleMap/objecttypes.xml",
+    "map.lastUsedExportFilter": "Tous les Fichiers (*)",
+    "map.lastUsedFormat": "tmx",
     "openFiles": [
-        "tiles.json",
-        "map.json"
     ],
     "project": "Pokemon.tiled-project",
-    "property.type": "bool",
+    "property.type": "file",
     "recentFiles": [
-        "Pipoya RPG Tileset 32x32/SampleMap/[A]WaterFall_pipo.tsx",
-        "Pipoya RPG Tileset 32x32/SampleMap/samplemap.tmx",
-        "Pipoya RPG Tileset 32x32/SampleMap/LightShadow_pipo.tsx",
-        "Pipoya RPG Tileset 32x32/SampleMap/[A]Flower_pipo.tsx",
-        "Pipoya RPG Tileset 32x32/SampleMap/[A]Grass_pipo.tsx",
-        "Male 01-1.json",
-        "character.json",
-        "tiles.json",
-        "map.json",
-        "characters.json",
         "tiles.tsx",
-        "sans titre.tmx"
+        "citizen.tsx",
+        "TEST/SampleMap/samplemap.tmx",
+        "TEST/SampleMap/[A]Flower_pipo.tsx",
+        "TEST/player.tsx",
+        "map.tmx"
     ],
-    "tileset.embedInMap": true,
-    "tileset.lastUsedFormat": "json",
+    "tileset.lastUsedFormat": "tsx",
     "tileset.margin": 0,
-    "tileset.tileSize": {
-        "height": 32,
-        "width": 32
-    },
-    "tileset.type": 0
+    "tileset.spacing": 0
 }

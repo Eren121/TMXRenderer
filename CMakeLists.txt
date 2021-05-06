@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(
     SRC
+    include/battle/State.hpp
+    src/battle/State.cpp
     include/config/Time.hpp src/config/Time.cpp
     include/tilemap/Region.hpp src/tilemap/Region.cpp
     include/tilemap/Region.hpp src/tilemap/Region.cpp
@@ -17,7 +19,7 @@ set(
     src/tilemap/Property.cpp
         include/config/Config.hpp
         src/config/Config.cpp
-        src/controller/Command.cpp src/config/Iterator2D.cpp include/config/Iterator2D.hpp include/config/Debug.hpp src/config/Debug.cpp src/tilemap/LayerOfObjects.cpp include/tilemap/LayerOfObjects.hpp src/tilemap/TileRenderer.cpp include/tilemap/TileRenderer.hpp src/common.cpp)
+        src/controller/Command.cpp src/config/Iterator2D.cpp include/config/Iterator2D.hpp include/config/Debug.hpp src/config/Debug.cpp src/tilemap/LayerOfObjects.cpp include/tilemap/LayerOfObjects.hpp src/tilemap/TileRenderer.cpp include/tilemap/TileRenderer.hpp src/common.cpp src/battle/InitState.cpp include/battle/InitState.hpp src/battle/PrepareTurnState.cpp include/battle/PrepareTurnState.hpp)
 
 set(LIBS sfml-graphics sfml-graphics sfml-window sfml-system GL)
 add_executable(Pokemon src/main.cpp ${SRC})
@@ -25,7 +27,6 @@ add_executable(Pokemon src/main.cpp ${SRC})
 target_include_directories(Pokemon PUBLIC include/)
 target_include_directories(Pokemon PUBLIC thirdparty/json/single_include)
 target_include_directories(Pokemon PUBLIC thirdparty/SFML-Math/include)
-target_include_directories(Pokemon PUBLIC thirdparty/Ouroupporos/include)
 target_include_directories(Pokemon PUBLIC thirdparty/magic_enum/include)
 
 target_link_libraries(Pokemon ${LIBS})
